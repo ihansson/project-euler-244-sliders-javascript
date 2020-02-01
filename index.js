@@ -128,4 +128,7 @@ function test(profile){
 	console.log(res, profile.answer, profile.answer === res)
 }
 
+tests.map(function(i){
+	console.log(i);
+})
 test(tests[1]);
