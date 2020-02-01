@@ -29,16 +29,16 @@ function broadSearch(letters, searches, target){
 	let continuations = [];
 	let answers = [];
 	for(search of searches){
-		let [board, whitePosition, moves, checkSum] = search;
+		let [board, whitePosition, moves, last_move] = search;
 		for(letter of letters){
-			if(movePossible(board, whitePosition, letter)){
+			if(shouldMove(board, whitePosition, last_move, letter)){
 				let [_board, _whitePosition] = calculateMove(board, whitePosition, letter);
 				let _moves = moves.slice(0);
 				_moves.push(letter);
 				if(compareBoards(_board, target)){
 					answers.push(_moves)
 				} else {
-					continuations.push([_board, _whitePosition, _moves])
+					continuations.push([_board, _whitePosition, _moves, letter])
 				}
 			}
 		}
@@ -52,7 +52,14 @@ function broadSearch(letters, searches, target){
 	}
 }
 
-function movePossible(board, whitePosition, direction){
+function shouldMove(board, whitePosition, last_move, direction){
+
+	if(last_move){
+		if(last_move === 'R' && direction === 'L') return false;
+		else if(last_move === 'D' && direction === 'U') return false;
+		else if(last_move === 'L' && direction === 'R') return false;
+		else if(last_move === 'U' && direction === 'D') return false;
+	}
 
 	if(direction == 'R' && whitePosition[0] === 0) return false;
 	else if(direction == 'D' && whitePosition[1] === 0) return false;
