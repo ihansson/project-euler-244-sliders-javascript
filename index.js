@@ -1,9 +1,3 @@
-// Helpers
-
-String.prototype.replaceAt=function(index, replacement) {
-    return this.substr(0, index) + replacement+ this.substr(index + replacement.length);
-}
-
 // Solution
 
 function processData(input) {
@@ -11,18 +5,17 @@ function processData(input) {
     const args = input.split("\n")
 
     const N = parseInt(args[0]);
-    const S = args.slice(1, N+1);
-    const E = args.slice(N+1);
-    // console.log(N,S,E)
+    const S = args.slice(1, N+1).map(row => row.split(''));
+    const E = args.slice(N+1).map(row => row.split(''));
 
     const letters = ['L','R','U','D'];
 
     let whitePosition = [0,0];
     for(let x = 0; x < N; x++){
-    	let wPos = S[x].indexOf('W');
-    	if(wPos > -1){
-    		whitePosition = [x, wPos]
-    		break;
+    	for(let i = 0; i < N; i++){
+    		if(S[x][i] === 'W'){
+	    		whitePosition = [x, i]
+    		}
     	}
     }
 
@@ -70,8 +63,6 @@ function movePossible(board, whitePosition, direction){
 
 }
 
-let total_swaps = 0;
-
 function calculateMove(board, whitePosition, direction){
 
 	let swapPosition = whitePosition.slice(0);
@@ -80,25 +71,29 @@ function calculateMove(board, whitePosition, direction){
 	else if(direction == 'L') swapPosition[0] += 1;
 	else if(direction == 'U') swapPosition[1] += 1;
 
-	const start = new Date();
 	let newBoard = swapBoardPositions(board, whitePosition, swapPosition);
-	total_swaps += new Date() - start;
 
 	return [newBoard, swapPosition];
 
 }
 
 function swapBoardPositions(board, A, B){
-	let newBoard = board.slice(0);
-	let x = board[A[1]].charAt(A[0]);
-	let y = board[B[1]].charAt(B[0]);
-	newBoard[A[1]] = newBoard[A[1]].replaceAt(A[0], y);
-	newBoard[B[1]] = newBoard[B[1]].replaceAt(B[0], x);
+
+	let newBoard = board.slice(0).map(row => row.slice(0));
+
+	newBoard[A[1]][A[0]] = board[B[1]][B[0]]
+	newBoard[B[1]][B[0]] = 'W'
+
 	return newBoard;
 }
 
 function compareBoards(A, B){
-	return A.every((value, index) => value === B[index]);
+	for(x in A){
+		for(y in A){
+			if(A[x][y] !== B[x][y]) return false;
+		}
+	}
+	return true;
 }
 
 function calcChecksum(checksum, letter){
@@ -132,11 +127,10 @@ function test(profile){
 	console.log(res, profile.answer, profile.answer === res)
 }
 
-test(tests[1])
+// test(tests[0])
 
 tests.map(function(profile){
 	const start = new Date();
 	test(profile);
 	console.info('Execution time: %dms', new Date() - start)
-	console.log(total_swaps)
 })
