@@ -26,13 +26,13 @@ function processData(input) {
     	}
     }
 
-    let res = broadSearch(letters, [[S, whitePosition, [], 0]], E, 0);
+    let res = broadSearch(letters, [[S, whitePosition, [], 0]], E);
 
     return res;
 
 }
 
-function broadSearch(letters, searches, target, move){
+function broadSearch(letters, searches, target){
 	let continuations = [];
 	let answers = [];
 	for(search of searches){
@@ -41,19 +41,19 @@ function broadSearch(letters, searches, target, move){
 			if(movePossible(board, whitePosition, letter)){
 				let [_board, _whitePosition] = calculateMove(board, whitePosition, letter);
 				let _moves = moves.slice(0);
-				let _checkSum = calcChecksum(checkSum, letter)
 				_moves.push(letter);
 				if(compareBoards(_board, target)){
-					answers.push(_checkSum)
-					// console.log(_moves);
+					answers.push(_moves)
 				} else {
-					continuations.push([_board, _whitePosition, _moves, _checkSum])
+					continuations.push([_board, _whitePosition, _moves])
 				}
 			}
 		}
 	}
 	if(answers.length > 0){
-		return answers.reduce((total, answer) => total + answer, 0)  % 100000007;
+		return answers.reduce((total, moves) => {
+			return total + moves.reduce(calcChecksum, 0)
+		}, 0) % 100000007;
 	} else if(continuations.length > 0){
 		return broadSearch(letters, continuations, target);
 	}
