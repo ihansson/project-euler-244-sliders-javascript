@@ -70,6 +70,8 @@ function movePossible(board, whitePosition, direction){
 
 }
 
+let total_swaps = 0;
+
 function calculateMove(board, whitePosition, direction){
 
 	let swapPosition = whitePosition.slice(0);
@@ -78,7 +80,9 @@ function calculateMove(board, whitePosition, direction){
 	else if(direction == 'L') swapPosition[0] += 1;
 	else if(direction == 'U') swapPosition[1] += 1;
 
+	const start = new Date();
 	let newBoard = swapBoardPositions(board, whitePosition, swapPosition);
+	total_swaps += new Date() - start;
 
 	return [newBoard, swapPosition];
 
@@ -134,4 +138,5 @@ tests.map(function(profile){
 	const start = new Date();
 	test(profile);
 	console.info('Execution time: %dms', new Date() - start)
+	console.log(total_swaps)
 })
