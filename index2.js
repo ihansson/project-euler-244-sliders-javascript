@@ -174,6 +174,7 @@ function runTests(testProfiles){
 }
 
 runTests([
+	/*
 	{
 		input: "2\nWR\nBB\nWR\nBB",
 		answer: 0
@@ -189,5 +190,10 @@ runTests([
 	{
 		input: "4\nWRBB\nRRBB\nRRBB\nRRBB\nRRBB\nRBBB\nRWRB\nRRBB",
 		answer: 91440058
+	},
+	*/
+	{
+		input: "4\nRRRR\nRRRR\nBWBB\nBBBB\nBBBB\nBWBB\nRRRR\nRRRR",
+		answer: 46012996
 	},
 ]);
