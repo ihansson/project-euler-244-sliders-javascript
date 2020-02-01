@@ -26,7 +26,9 @@ function processData(input) {
     	}
     }
 
-    console.log(broadSearch(letters, [[S, whitePosition, [], 0]], E, 0));
+    let res = broadSearch(letters, [[S, whitePosition, [], 0]], E, 0);
+
+    return res;
 
 }
 
@@ -43,7 +45,7 @@ function broadSearch(letters, searches, target, move){
 				_moves.push(letter);
 				if(compareBoards(_board, target)){
 					answers.push(_checkSum)
-					// answers.push([_board, whitePosition, _whitePosition, _moves, _checkSum, letter])
+					// answers.push([_board, _whitePosition, _moves, _checkSum, letter])
 				} else {
 					continuations.push([_board, _whitePosition, _moves, _checkSum])
 				}
@@ -51,7 +53,7 @@ function broadSearch(letters, searches, target, move){
 		}
 	}
 	if(answers.length > 0){
-		return Math.min.apply( Math, answers );
+		return answers.reduce((total, answer) => total + answer, 0);
 	} else if(continuations.length > 0){
 		return broadSearch(letters, continuations, target);
 	}
@@ -106,9 +108,24 @@ function asciiValue(letter){
 	if(letter === 'D') return 68;
 }
 
-// const res = processData("2\nWR\nBB\nRB\nBW");
-const res = processData("3\nBBB\nBWR\nRRR\nRBR\nBWB\nRBR");
-// processData("4\nWRBB\nRRBB\nRRBB\nRRBB\nRRBB\nRBBB\nRWRB\nRRBB");
+const tests = [
+	{
+		input: "2\nWR\nBB\nRB\nBW",
+		answer: 18553
+	},
+	{
+		input: "3\nBBB\nBWR\nRRR\nRBR\nBWB\nRBR",
+		answer: 86665639
+	},
+	{
+		input: "4\nWRBB\nRRBB\nRRBB\nRRBB\nRRBB\nRBBB\nRWRB\nRRBB",
+		answer: 19761398
+	}
+]
 
+function test(profile){
+	const res =processData(profile.input);
+	console.log(res, profile.answer, profile.answer === res)
+}
 
-
+test(tests[1]);
