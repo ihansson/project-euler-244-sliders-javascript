@@ -1,141 +1,177 @@
-// Solution
+// Cell Types
 
-function processData(input) {
-    
+const W = 'W';
+
+// Directions
+
+const L = 'L';
+const R = 'R';
+const U = 'U';
+const D = 'D';
+
+// Process input
+
+function processData(input){
+
+	// Process input and format boards into strings
+
     const args = input.split("\n")
 
-    const N = parseInt(args[0]);
-    const S = args.slice(1, N+1).map(row => row.split(''));
-    const E = args.slice(N+1).map(row => row.split(''));
+    const boardSize_N = parseInt(args[0]);
+    const startBoard_S = args.slice(1, boardSize_N+1).join('');
+    const targetBoard_E = args.slice(boardSize_N+1).join('');
 
-    const letters = ['L','R','U','D'];
+    // Boards 
 
-    let whitePosition = [0,0];
-    for(let x = 0; x < N; x++){
-    	for(let i = 0; i < N; i++){
-    		if(S[x][i] === 'W'){
-	    		whitePosition = [x, i]
-    		}
-    	}
-    }
+    return calculateMinimumLengthPath(boardSize_N, startBoard_S, targetBoard_E);
 
-    let res = broadSearch(letters, [[S, whitePosition, [], 0]], E, 1);
-
-    return res;
 
 }
 
-function broadSearch(letters, searches, target, depth){
-	let continuations = [];
-	let answers = [];
-	for(search of searches){
-		let [board, whitePosition, moves, last_move] = search;
-		let key = hash(board);
-		if(cache[key]){
-			continue;
-		}
-		for(letter of letters){
-			if(shouldMove(board, whitePosition, last_move, letter)){
-				let [_board, _whitePosition] = calculateMove(board, whitePosition, letter);
-				let _moves = moves.slice(0);
-				_moves.push(letter);
-				if(compareBoards(_board, target)){
-					answers.push(_moves)
-				} else {
-					continuations.push([_board, _whitePosition, _moves, letter])
-				}
+// Calculate minimum length path from board state A to B
+
+function calculateMinimumLengthPath(boardSize_N, startBoard_S, targetBoard_E){
+
+	// Boards already match
+
+    if(startBoard_S === targetBoard_E){
+    	return 0;
+    }
+
+    const answers = stepOrResolve(boardSize_N, [[startBoard_S, [], []]], targetBoard_E, 1);
+
+	return answers.reduce((total, moves) => {
+		return total + moves.reduce(calcChecksum, 0)
+	}, 0) % 100000007;
+
+}
+
+// Calculate paths breadth wise
+
+let boardHistory = {};
+
+function stepOrResolve(boardSize_N, boards, targetBoard_E, depth){
+
+	let nextBoards = [];
+	let solvedBoards = [];
+
+	for(_board of boards){
+
+		let [startBoard_S, moves, history] = _board;
+
+		if(boardHistory[startBoard_S]) continue;
+		if(history.includes(startBoard_S)) continue;
+
+		let wPosition = startBoard_S.indexOf(W);
+		let wPositionCol = wPosition % boardSize_N;
+		let wPositionRow = wPosition >= boardSize_N ? Math.floor(wPosition / boardSize_N) % boardSize_N : 0;
+
+		let last_move = moves[moves.length -1];
+
+	    for(direction of [L,R,U,D]){
+	    	
+			if     (direction === L && wPositionCol === boardSize_N - 1) continue;
+			else if(direction === R && wPositionCol === 0) continue;
+			else if(direction === U && wPositionRow === boardSize_N - 1) continue;
+			else if(direction === D && wPositionRow === 0) continue;
+			else if(direction === L && last_move === R) continue;
+			else if(direction === R && last_move === L) continue;
+			else if(direction === U && last_move === D) continue;
+			else if(direction === D && last_move === U) continue;
+
+			const board = createBoardFromMove(boardSize_N, startBoard_S, wPosition, direction);
+
+			let _moves = moves.slice(0);
+			_moves.push(direction);
+
+			if(board === targetBoard_E){
+				solvedBoards.push(_moves);
+			} else {
+				nextBoards.push([board, _moves, [startBoard_S]]);
 			}
-		}
+
+	    }
+
 	}
-	searches.map(con => {
-		let x = hash(con[0])
-		cache[x] = con[2];
+
+	boards.map(board => {
+		board[2].map(state => {
+			boardHistory[state] = true;
+		})
 	})
-	if(answers.length > 0){
-		return answers.reduce((total, moves) => {
-			return total + moves.reduce(calcChecksum, 0)
-		}, 0) % 100000007;
-	} else if(continuations.length > 0){
-		return broadSearch(letters, continuations, target, depth + 1);
-	}
-}
 
-let cache = {};
-
-function hash(board){
-	let key = '';
-    for(let x = 0; x < board.length; x++){
-    	for(let i = 0; i < board.length; i++){
-    		key += board[x][i];
-    	}
-    }
-    return key;
-}
-
-function shouldMove(board, whitePosition, last_move, direction){
-
-	if(last_move){
-		if(last_move === 'R' && direction === 'L') return false;
-		else if(last_move === 'D' && direction === 'U') return false;
-		else if(last_move === 'L' && direction === 'R') return false;
-		else if(last_move === 'U' && direction === 'D') return false;
+	if(solvedBoards.length > 0){
+		return solvedBoards;
+	} else if(nextBoards.length > 0) {
+		return stepOrResolve(boardSize_N, nextBoards, targetBoard_E, depth + 1);
+	} else {
+		return [];
 	}
 
-	if(direction == 'R' && whitePosition[0] === 0) return false;
-	else if(direction == 'D' && whitePosition[1] === 0) return false;
-	else if(direction == 'L' && whitePosition[0] === board.length - 1) return false;
-	else if(direction == 'U' && whitePosition[1] === board.length - 1) return false;
-
-	return true;
-
 }
 
-
-function calculateMove(board, whitePosition, direction){
-
-	let swapPosition = [whitePosition[0],whitePosition[1]];
-	if(direction == 'R') swapPosition[0] -= 1;
-	else if(direction == 'D') swapPosition[1] -= 1;
-	else if(direction == 'L') swapPosition[0] += 1;
-	else if(direction == 'U') swapPosition[1] += 1;
-
-	let newBoard = swapBoardPositions(board, whitePosition, swapPosition);
-
-	return [newBoard, swapPosition];
-
-}
-
-function swapBoardPositions(board, A, B){
-
-	let newBoard = board.slice(0).map(row => row.slice(0));
-
-	newBoard[A[1]][A[0]] = board[B[1]][B[0]]
-	newBoard[B[1]][B[0]] = 'W'
-
-	return newBoard;
-}
-
-function compareBoards(A, B){
-	for(x in A){
-		for(y in A){
-			if(A[x][y] !== B[x][y]) return false;
-		}
-	}
-	return true;
-}
+// Calculate checksum
 
 function calcChecksum(checksum, letter){
 	return (checksum * 243 + asciiValue(letter)) % 100000007
 }
 
 function asciiValue(letter){
-	if(letter === 'L') return 76;
-	if(letter === 'R') return 82;
-	if(letter === 'U') return 85;
-	if(letter === 'D') return 68;
+	if(letter === L) return 76;
+	if(letter === R) return 82;
+	if(letter === U) return 85;
+	if(letter === D) return 68;
 }
 
-const tests = [
+// Return resulting board from a move
+
+let boardMoveCache = {};
+
+function createBoardFromMove(boardSize_N, startBoard_S, wPosition, direction){
+	let newBoard;
+
+	if(boardMoveCache[startBoard_S+direction]) return boardMoveCache[startBoard_S+direction];
+
+	if(direction === L){
+		newBoard = startBoard_S.slice(0, wPosition) + startBoard_S.charAt(wPosition + 1) + W + startBoard_S.slice(wPosition + 2);
+	}
+	else if(direction === R){
+		newBoard = startBoard_S.slice(0, wPosition - 1) + W + startBoard_S.charAt(wPosition - 1) + startBoard_S.slice(wPosition + 1);
+	}
+	else if(direction === U){
+		newBoard = startBoard_S.slice(0, wPosition)  + startBoard_S.charAt(wPosition + boardSize_N) + startBoard_S.slice(wPosition + 1, wPosition + boardSize_N) + W + startBoard_S.slice(wPosition + boardSize_N + 1);
+	}
+	else if(direction === D){
+		newBoard = startBoard_S.slice(0, wPosition - boardSize_N)  + W + startBoard_S.slice(wPosition - boardSize_N + 1, wPosition) + startBoard_S.charAt(wPosition - boardSize_N) + startBoard_S.slice(wPosition + 1);
+	}
+
+	boardMoveCache[startBoard_S+direction] = newBoard;
+
+	return newBoard;
+}
+
+
+// Testing
+
+function runTest(profile){
+	const res = processData(profile.input);
+	console.log(res, profile.answer, profile.answer === res)
+}
+
+function runTests(testProfiles){
+	testProfiles.map(function(testProfile){
+		const start = new Date();
+		cache = {};
+		runTest(testProfile);
+		console.info('Execution time: %dms', new Date() - start)
+	})
+}
+
+runTests([
+	{
+		input: "2\nWR\nBB\nWR\nBB",
+		answer: 0
+	},
 	{
 		input: "2\nWR\nBB\nRB\nBW",
 		answer: 18553
@@ -148,24 +184,10 @@ const tests = [
 		input: "4\nWRBB\nRRBB\nRRBB\nRRBB\nRRBB\nRBBB\nRWRB\nRRBB",
 		answer: 91440058
 	},
+	/*
 	{
-		input: "4\nWRBB\nRRBB\nRRBB\nRRBB\nWBRB\nBRBR\nRBRB\nBRBR",
-		answer: 91440058
+		input: "4\nRRRR\nRRRR\nBWBB\nBBBB\nBBBB\nBWBB\nRRRR\nRRRR",
+		answer: 46012996
 	},
-]
-
-function test(profile){
-	const res = processData(profile.input);
-	console.log(res, profile.answer, profile.answer === res)
-}
-
-test(tests[3])
-
-return;
-
-tests.map(function(profile){
-	const start = new Date();
-	cache = {};
-	test(profile);
-	console.info('Execution time: %dms', new Date() - start)
-})
+	*/
+]);
