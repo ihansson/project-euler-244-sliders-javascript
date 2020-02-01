@@ -19,17 +19,21 @@ function processData(input) {
     	}
     }
 
-    let res = broadSearch(letters, [[S, whitePosition, [], 0]], E);
+    let res = broadSearch(letters, [[S, whitePosition, [], 0]], E, 1);
 
     return res;
 
 }
 
-function broadSearch(letters, searches, target){
+function broadSearch(letters, searches, target, depth){
 	let continuations = [];
 	let answers = [];
 	for(search of searches){
 		let [board, whitePosition, moves, last_move] = search;
+		let key = hash(board);
+		if(cache[key]){
+			continue;
+		}
 		for(letter of letters){
 			if(shouldMove(board, whitePosition, last_move, letter)){
 				let [_board, _whitePosition] = calculateMove(board, whitePosition, letter);
@@ -43,13 +47,29 @@ function broadSearch(letters, searches, target){
 			}
 		}
 	}
+	searches.map(con => {
+		let x = hash(con[0])
+		cache[x] = con[2];
+	})
 	if(answers.length > 0){
 		return answers.reduce((total, moves) => {
 			return total + moves.reduce(calcChecksum, 0)
 		}, 0) % 100000007;
 	} else if(continuations.length > 0){
-		return broadSearch(letters, continuations, target);
+		return broadSearch(letters, continuations, target, depth + 1);
 	}
+}
+
+let cache = {};
+
+function hash(board){
+	let key = '';
+    for(let x = 0; x < board.length; x++){
+    	for(let i = 0; i < board.length; i++){
+    		key += board[x][i];
+    	}
+    }
+    return key;
 }
 
 function shouldMove(board, whitePosition, last_move, direction){
@@ -70,9 +90,10 @@ function shouldMove(board, whitePosition, last_move, direction){
 
 }
 
+
 function calculateMove(board, whitePosition, direction){
 
-	let swapPosition = whitePosition.slice(0);
+	let swapPosition = [whitePosition[0],whitePosition[1]];
 	if(direction == 'R') swapPosition[0] -= 1;
 	else if(direction == 'D') swapPosition[1] -= 1;
 	else if(direction == 'L') swapPosition[0] += 1;
@@ -126,7 +147,11 @@ const tests = [
 	{
 		input: "4\nWRBB\nRRBB\nRRBB\nRRBB\nRRBB\nRBBB\nRWRB\nRRBB",
 		answer: 91440058
-	}
+	},
+	{
+		input: "4\nWRBB\nRRBB\nRRBB\nRRBB\nWBRB\nBRBR\nRBRB\nBRBR",
+		answer: 91440058
+	},
 ]
 
 function test(profile){
@@ -134,10 +159,13 @@ function test(profile){
 	console.log(res, profile.answer, profile.answer === res)
 }
 
-// test(tests[0])
+test(tests[3])
+
+return;
 
 tests.map(function(profile){
 	const start = new Date();
+	cache = {};
 	test(profile);
 	console.info('Execution time: %dms', new Date() - start)
 })
