@@ -45,7 +45,7 @@ function broadSearch(letters, searches, target, move){
 				_moves.push(letter);
 				if(compareBoards(_board, target)){
 					answers.push(_checkSum)
-					console.log(_moves);
+					// console.log(_moves);
 				} else {
 					continuations.push([_board, _whitePosition, _moves, _checkSum])
 				}
