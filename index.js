@@ -45,7 +45,7 @@ function broadSearch(letters, searches, target, move){
 				_moves.push(letter);
 				if(compareBoards(_board, target)){
 					answers.push(_checkSum)
-					// answers.push([_board, _whitePosition, _moves, _checkSum, letter])
+					console.log(_moves);
 				} else {
 					continuations.push([_board, _whitePosition, _moves, _checkSum])
 				}
@@ -53,7 +53,7 @@ function broadSearch(letters, searches, target, move){
 		}
 	}
 	if(answers.length > 0){
-		return answers.reduce((total, answer) => total + answer, 0);
+		return answers.reduce((total, answer) => total + answer, 0)  % 100000007;
 	} else if(continuations.length > 0){
 		return broadSearch(letters, continuations, target);
 	}
@@ -94,7 +94,7 @@ function swapBoardPositions(board, A, B){
 }
 
 function compareBoards(A, B){
-	return JSON.stringify(A) == JSON.stringify(B)
+	return A.every((value, index) => value === B[index]);
 }
 
 function calcChecksum(checksum, letter){
@@ -119,16 +119,19 @@ const tests = [
 	},
 	{
 		input: "4\nWRBB\nRRBB\nRRBB\nRRBB\nRRBB\nRBBB\nRWRB\nRRBB",
-		answer: 19761398
+		answer: 91440058
 	}
 ]
 
 function test(profile){
-	const res =processData(profile.input);
+	const res = processData(profile.input);
 	console.log(res, profile.answer, profile.answer === res)
 }
 
-tests.map(function(i){
-	console.log(i);
+test(tests[1])
+
+tests.map(function(profile){
+	const start = new Date();
+	test(profile);
+	console.info('Execution time: %dms', new Date() - start)
 })
-test(tests[1]);
